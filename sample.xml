@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="88d40b76-ad1f-4303-bfd2-833ba7df64b9" >
+		<http:listener-connection host="localhost" port="8080" readTimeout="3000"/>
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce_Config" doc:id="0ec7f5b9-349e-4ac7-bc40-972f38d35b6f" >
+		<salesforce:basic-connection username="mulesoft.user@springfive.com.bld" password="Springfive@092023" securityToken="MyrT1khdZuCVFntfLHN2j1Zzq" url="https://test.salesforce.com/services/Soap/u/53.0"/>
+	</salesforce:sfdc-config>
+	<flow name="sampleFlow" doc:id="665d7be8-f207-4aae-86ea-6aca897de2fb" >
+		<http:listener doc:name="Listener" doc:id="052312b1-8169-4966-8162-168c31d1728e" config-ref="HTTP_Listener_config" path="/query" allowedMethods="GET"/>
+		<ee:transform doc:name="Transform Message" doc:id="de59b9c9-134e-4dcb-bf79-8a2bfe88f491">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	jobId: payload.attribute.queryParams
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:retrieve-job-failed-results-bulk-v2 doc:name="Retrieve job failed results bulk v 2" doc:id="ee592195-295e-45fd-86a5-4d235159ff09" config-ref="Salesforce_Config" id="#[payload.jobId]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c38f6325-c02c-4c16-bcec-abbfa0820b7b" message='#[payload]'/>
+	</flow>
+</mule>
